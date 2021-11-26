@@ -19,4 +19,5 @@ nltk==3.5
 newsapi-python==0.2.6
 pyyaml
 watchdog
+pandas_ta
 
