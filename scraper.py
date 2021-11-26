@@ -7,10 +7,11 @@ urls = ["https://finance.yahoo.com/gainers", "https://finance.yahoo.com/screener
 
 def active_stocks():
     scraped_stocks = constants.STOCKS_TO_CHECK
+    if not constants.GET_GREAT_STOCKS:
+        return list(set(scraped_stocks))
     for url in urls:
         soup = BeautifulSoup(requests.get(url).text, 'html.parser')
         results = soup.find(id="Lead-5-ScreenerResults-Proxy")
-        assets = soup.get_text()
         for result in results.find_all('a'):
             href = result['href']
             if '=' in href: scraped_stocks.append(href[href.find('=') + 1:])
