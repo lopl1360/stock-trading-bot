@@ -3,10 +3,11 @@ import stock_data_gatherer as sdg
 
 def moving_average_checker(ticker_symbol) -> int:
    stock_status = sdg.get_current_stock_data(ticker_symbol)
-   if stock_status['Close'] > stock_status['EMA'] and stock_status['PREVPRICE'] < stock_status['PREVSMA']:
+   if stock_status['EMA_TA_SHORT'][-1] > stock_status['EMA_TA_LONG'][-1] and stock_status['EMA_TA_SHORT'][-2] < stock_status['EMA_TA_SHORT'][-1]:
        return 0.3
-   elif stock_status['Close'] < stock_status['SMA'] and stock_status['PREVPRICE'] > stock_status['PREVSMA']:
+   if stock_status['EMA_TA_SHORT'][-1] < stock_status['EMA_TA_LONG'][-1] and stock_status['EMA_TA_SHORT'][-2] > stock_status['EMA_TA_SHORT'][-1]:
        return -0.3
+
    return 0
 
 def volume_checker(ticker_symbol) -> int:
@@ -21,7 +22,7 @@ def volume_checker(ticker_symbol) -> int:
         price = 0
 
 
-    print(ticker_symbol, ": Price: ", price, " Volume: ", volume)
+    # print(ticker_symbol, ": Price: ", price, " Volume: ", volume)
     if price > 0.04 and volume > 1:
         return 0.2
     elif price < -0.03 and volume > 0.8:
