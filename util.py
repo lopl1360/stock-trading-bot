@@ -1,9 +1,10 @@
 import math
-import pandas
+import pandas as pd
+import pandas_ta as ta
 
 # param history : pd.DataFrame
 # Return format: [current_sma, previous_sma]
-def calculate_sma(history) -> []:
+def calculate_sma(history):
     summation = 0
     for row in history.iterrows():
         summation += row[1]['Close']
@@ -14,6 +15,9 @@ def calculate_ema(history) -> int:
     sma = calculate_sma(history)
     weighted_multiplier = 2 / (len(history.index) + 1)
     return history.iloc[-1]['Close']  * weighted_multiplier + sma[1] * (1 - weighted_multiplier)
+
+def calculate_ema_ta(history, length):
+    return ta.ema(history['Close'], length=length)
 
 def partition_array(array, number_of_partitions):
     partition_size = math.ceil(len(array)/number_of_partitions)
