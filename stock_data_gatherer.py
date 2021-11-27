@@ -4,12 +4,12 @@ import util
 # @param ticker_symbol - str
 # @param time_period - Valid Periods: 1d, 5d, 1mo,3mo,6mo,1y,2y,5y,10y,ytd,maxi
 # @param time_interval - Valid Periods:`1m , 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
-def get_historical_data(ticker_symbol: str, time_period: str, time_interval: str) -> yf.Ticker:
+def get_historical_data(ticker_symbol: str, time_period: str, time_interval: str):
     return yf.Ticker(ticker_symbol).history(period=time_period, interval=time_interval)
 
 #todo: check all is functional
-def get_current_stock_data(ticker_symbol: str) -> {}:
-    historical_stock_data = get_historical_data(ticker_symbol, '3d', '2m')
+def get_current_stock_data(ticker_symbol: str):
+    historical_stock_data = get_historical_data(ticker_symbol, '5d', '2m')
     stock_data = historical_stock_data.iloc[-1].to_dict()
     
     del stock_data['Dividends']
@@ -19,6 +19,9 @@ def get_current_stock_data(ticker_symbol: str) -> {}:
     stock_data['PREVSMA'] = util.calculate_sma(historical_stock_data)[1]
     stock_data['EMA'] = util.calculate_ema(historical_stock_data)
     stock_data['PREVPRICE'] = historical_stock_data.iloc[-2].to_dict()['Close']#might need to change, only checks price 2 minutes ago
+    stock_data['EMA_TA_SHORT'] = util.calculate_ema_ta(historical_stock_data, 20)
+    stock_data['EMA_TA_LONG'] = util.calculate_ema_ta(historical_stock_data, 50)
+
 
     return stock_data
 
