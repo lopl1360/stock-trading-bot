@@ -21,4 +21,6 @@ pyyaml
 watchdog
 pandas_ta
 tzlocal
+tweepy
+textblob
 

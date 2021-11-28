@@ -13,6 +13,10 @@ import stock_data_gatherer as sdg
 import util
 import news_classifier as nc
 import requests
+import pytz
+from tzlocal import get_localzone
+import twitter
+
 
 def daytrading_stock_analyzer(stocks):
     for stock_ticker in stocks: #purchases stocks based on daytrading patterns
@@ -20,26 +24,28 @@ def daytrading_stock_analyzer(stocks):
             stock_score = 0
             stock_score += sa.moving_average_checker(stock_ticker)
             stock_score += sa.volume_checker(stock_ticker)
-            if stock_score >= 0.2 and stock_ticker not in all_active_positions.keys():
-                alpaca.create_order(stock_ticker, 1) #todo: calculate order amount
-                active_positions_to_check[stock_ticker] = sdg.get_current_stock_data(stock_ticker)['Close']
-                all_active_positions[stock_ticker] = sdg.get_current_stock_data(stock_ticker)['Close']
+            if stock_score >= 0.3 and stock_ticker not in all_active_positions.keys():
+                # alpaca.create_order(stock_ticker, 1) #todo: calculate order amount
+                # active_positions_to_check[stock_ticker] = sdg.get_current_stock_data(stock_ticker)['Close']
+                # all_active_positions[stock_ticker] = sdg.get_current_stock_data(stock_ticker)['Close']
                 print("Based on daytrading pattern analysis, buying", stock_ticker, "Stock Score: ", stock_score)
         except Exception as e:
             pass
 
-def news_stock_analyzer(stock_ticker):
+def media_stock_analyzer(stock_ticker):
     try:
+        tw = twitter.TwitterClient()
         stock_score = 0
         stock_score += nc.sentiment_analyzer(news.get_news(stock_ticker))
-        print(stock_ticker, "news score:", stock_score)
+        stock_score += nc.sentiment_analyzer(tw.get_tweets("$"+stock_ticker, 10))
+        print(stock_ticker, "media score:", stock_score)
         if stock_score >= 0.35 and stock_ticker not in all_active_positions.keys():
-            alpaca.create_order(stock_ticker, 1) #todo: calculate order amount
-            active_positions_to_check[stock_ticker] = sdg.get_current_stock_data(stock_ticker)['Close']
-            all_active_positions[stock_ticker] = sdg.get_current_stock_data(stock_ticker)['Close']
-            print("Based on News analysis, buying", stock_ticker)
+            # alpaca.create_order(stock_ticker, 1) #todo: calculate order amount
+            # active_positions_to_check[stock_ticker] = sdg.get_current_stock_data(stock_ticker)['Close']
+            # all_active_positions[stock_ticker] = sdg.get_current_stock_data(stock_ticker)['Close']
+            print("Based on Media analysis, buying", stock_ticker)
     except Exception as e:
-        print("News analysis not working for", stock_ticker)
+        print("Media analysis not working for", stock_ticker, str(e))
 
 
 def stock_position_analyzer():
@@ -75,9 +81,8 @@ if __name__ == "__main__":
 
     while True:
         try:
-            print("New Iteration of Stock Scanning")
+            # print("New Iteration of Stock Scanning")
             current_time = datetime.now().strftime("%H:%M")
-            # current_time = "12:01"
             if current_time > const.STOCK_MARKET_OPEN_TIME and current_time < const.STOCK_MARKET_CLOSE_TIME:
                 if first_time_run:
                     threading.Thread(target=stock_position_analyzer).start()
@@ -86,11 +91,12 @@ if __name__ == "__main__":
                 partitioned_stocks = util.partition_array(active_stocks, const.STOCK_SCANNER_PARTITION_COUNT)
                 for partition in partitioned_stocks:
                     threading.Thread(target=daytrading_stock_analyzer, args=[partition]).start()
+                    time.sleep(0.5)
             else:
                 alpaca.sell_all_positions()
                 print("Market Close")
                 for stock_ticker in const.STOCKS_TO_CHECK: #purchases stocks based on news info
-                    threading.Thread(target=news_stock_analyzer, args=(stock_ticker,)).start()
-                time.sleep(360000)
+                    threading.Thread(target=media_stock_analyzer, args=(stock_ticker,)).start()
+            time.sleep(300)
         except Exception as e:
             print("Restarting")
